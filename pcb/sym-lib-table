@@ -1,0 +1,5 @@
+(sym_lib_table
+  (lib (name LTC2400CS8PBF)(type Legacy)(uri ${KIPRJMOD}/LTC2400CS8PBF.lib)(options "")(descr ""))
+  (lib (name LTC2057IS8TRPBF)(type Legacy)(uri ${KIPRJMOD}/LTC2057IS8TRPBF.lib)(options "")(descr ""))
+  (lib (name MAX6126AASA41)(type Legacy)(uri ${KIPRJMOD}/MAX6126AASA41.lib)(options "")(descr ""))
+)

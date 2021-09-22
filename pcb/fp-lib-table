@@ -1,0 +1,3 @@
+(fp_lib_table
+  (lib (name battery_licker)(type KiCad)(uri /home/duck/kicad/lib/battery_licker)(options "")(descr ""))
+)
