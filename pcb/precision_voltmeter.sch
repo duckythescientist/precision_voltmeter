@@ -353,12 +353,12 @@ Wire Wire Line
 $Comp
 L Device:R R5
 U 1 1 614C48F8
-P 5850 5000
-F 0 "R5" V 5643 5000 50  0000 C CNN
-F 1 "4.7k" V 5734 5000 50  0000 C CNN
-F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 5780 5000 50  0001 C CNN
-F 3 "~" H 5850 5000 50  0001 C CNN
-	1    5850 5000
+P 5600 5000
+F 0 "R5" V 5393 5000 50  0000 C CNN
+F 1 "4.7k" V 5484 5000 50  0000 C CNN
+F 2 "Resistor_SMD:R_0805_2012Metric_Pad1.20x1.40mm_HandSolder" V 5530 5000 50  0001 C CNN
+F 3 "~" H 5600 5000 50  0001 C CNN
+	1    5600 5000
 	0    1    1    0   
 $EndComp
 $Comp
@@ -548,8 +548,8 @@ Wire Wire Line
 Wire Wire Line
 	8850 3200 9350 3200
 Wire Wire Line
-	6200 5000 6000 5000
-Text Notes 5900 5100 0    50   ~ 0
+	6200 5000 5950 5000
+Text Notes 5800 4950 0    50   ~ 0
 keep short
 Connection ~ 3850 5100
 $Comp
@@ -702,10 +702,10 @@ Wire Wire Line
 Wire Wire Line
 	4150 5000 4150 5300
 Wire Wire Line
-	4150 5300 5950 5300
+	4150 5300 4950 5300
 Connection ~ 5950 5300
 Wire Wire Line
-	5700 5000 5400 5000
+	5450 5000 5400 5000
 Wire Wire Line
 	5400 5000 5400 4050
 Wire Wire Line
@@ -1543,7 +1543,7 @@ $EndComp
 Wire Wire Line
 	3850 4600 6100 4600
 Wire Wire Line
-	4400 4700 6200 4700
+	4400 4700 4950 4700
 Wire Wire Line
 	4050 4450 4050 4700
 Connection ~ 4050 4700
@@ -1923,4 +1923,41 @@ Text Notes 1850 5550 2    50   ~ 0
 GNDREF STAR GROUND
 Wire Wire Line
 	1250 5600 1700 5600
+$Comp
+L Device:C C?
+U 1 1 614E2E43
+P 4950 4950
+F 0 "C?" H 5065 4996 50  0000 L CNN
+F 1 "100n" H 5065 4905 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 4988 4800 50  0001 C CNN
+F 3 "~" H 4950 4950 50  0001 C CNN
+	1    4950 4950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C?
+U 1 1 614E3586
+P 5950 5150
+F 0 "C?" H 6065 5196 50  0000 L CNN
+F 1 "220p" H 6065 5105 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric_Pad1.18x1.45mm_HandSolder" H 5988 5000 50  0001 C CNN
+F 3 "~" H 5950 5150 50  0001 C CNN
+	1    5950 5150
+	1    0    0    -1  
+$EndComp
+Connection ~ 5950 5000
+Wire Wire Line
+	5950 5000 5750 5000
+Wire Wire Line
+	4950 4800 4950 4700
+Connection ~ 4950 4700
+Wire Wire Line
+	4950 4700 6200 4700
+Wire Wire Line
+	4950 5100 4950 5300
+Connection ~ 4950 5300
+Wire Wire Line
+	4950 5300 5950 5300
+Text Notes 5650 4700 0    50   ~ 0
+keep short
 $EndSCHEMATC
