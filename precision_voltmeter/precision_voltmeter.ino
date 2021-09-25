@@ -116,12 +116,20 @@ void setup() {
 
   max7219.Begin();
   max7219.MAX7219_SetBrightness(0x5);  // 0x0 - 0xF
-  max7219.DisplayText("hEllo   ", 0);
+  max7219.Clear();
+  max7219.DisplayText("hEllo", 0);
   delay(1000);
   Serial.println("hello");
   delay(1000);
   Serial.println("hello again");
   load_calibration();
+  print_cal();
+  if (!current_calibration.calibrated) {
+    Serial.println(F("UNCALIBRATED"));
+    max7219.Clear();
+    max7219.DisplayText("UnCAL", 0);
+    delay(3000);
+  }
 
   //  // Putting the processor to sleep messes with updates
   //  // so wait here while button 1 is held.
@@ -203,6 +211,9 @@ void handle_serial() {
     case 'z':
       zero_cal();
       break;
+    case 'c':
+      print_cal();
+      break;
     case ' ':
     case '\r':
     case '\n':
@@ -277,6 +288,29 @@ void loop() {
         update_range_mode(RANGE_AUTO);
       }
 
+    }
+
+    if (button == 4) {
+      // not currently handled
+    }
+
+    if (button == 5) {
+      digitalWrite(LED3, HIGH);
+      digitalWrite(LED4, HIGH);
+      delay(3000);
+      button = read_buttons();
+      if (button == 5) {
+        digitalWrite(LED3, LOW);
+        digitalWrite(LED4, LOW);
+        digitalWrite(LED1, HIGH);
+        digitalWrite(LED2, HIGH);
+        while (read_buttons());
+        zero_cal();
+      }
+      else {
+        digitalWrite(LED3, HIGH);
+        digitalWrite(LED4, HIGH);
+      }
     }
   }
   last_button = button;

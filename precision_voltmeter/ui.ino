@@ -92,7 +92,9 @@ int read_buttons() {
       Resistors: 1.8k, 4.7k, 10k, 22k
   */
   int val = analogRead(BUTTON_PIN);
-  if (val < 242)
+  if (val < 137)
+    return 5;  // Buttons 3 and 4 together
+  else if (val < 242)
     return 4;
   else if (val < 420)
     return 3;
