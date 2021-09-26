@@ -6,9 +6,15 @@ Partly based off of the Scullcom millivolt meter: http://www.scullcom.uk/design-
 
 # Notes for Future Versions and Improvements
 
+## Issues
+
+The LTC2057 has a common-mode input range from 0.1V below V- to 1.5V _below_ V+. Meaning that with a -2.5V,+5V supply, I can only buffer signals up to 3.5V technically. I'm seeing some sort of latchup-type behavior at around 4.2V.
+
 ## Bodges
 
 The sampling of the ADC is rather noisy. Adding filter capacitors right at the input and the vref seem to help. Reduced the resistor between the buffer and the ADC to 2.2k. May want to go lower?
+
+Adding extra voltage regulator to drive the op-amp positive rail at around 6.8V to give enough common-mode headroom to buffer a full input swing to the ADC. (Boards ordered but not received/installed.)
 
 
 ## Future
