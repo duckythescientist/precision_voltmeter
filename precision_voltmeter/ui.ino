@@ -58,6 +58,15 @@ void display_value(Double val, enum Range range) {
   //  Serial.print("f_rem_int:");
   //  Serial.println(fp64_to_string(f_rem_int, 17, 0));
   int32_t rem_int = fp64_lrint(f_rem_int);
+  // Limit rem_int at the extremes due to weird rounding
+  // Otherwise something like round(4.9999, 3)
+  // turns into 4 and 1000 instead of 4 and 999.
+  if (rem_int < 0L) {
+    rem_int = 0L;
+  }
+  if (rem_int >= multiplier) {
+    rem_int = multiplier - 1;
+  }
 
   //  Serial.print("whole:");
   //  Serial.println(whole);

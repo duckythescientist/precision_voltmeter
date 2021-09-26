@@ -2,7 +2,7 @@
 #define cal_h
 
 #define CAL_VERSION_MAJOR 0
-#define CAL_VERSION_MINOR 5
+#define CAL_VERSION_MINOR 7
 
 #define CAL_EEPROM_ADDRESS 0
 

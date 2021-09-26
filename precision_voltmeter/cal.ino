@@ -26,11 +26,12 @@ int load_calibration() {
 
 void print_cal() {
   if (current_calibration.calibrated) {
-    Serial.println(F("Calibrated: YES"));
+    Serial.print(F("Calibrated: YES: "));
   }
   else {
-    Serial.println(F("Calibrated: NO"));
+    Serial.print(F("Calibrated: NO: "));
   }
+  Serial.println(current_calibration.calibrated, BIN);
   char buf[16];
   for (int i=0; i<4; i++) {
     CalibrationPoint cal = current_calibration.x[i];
@@ -51,8 +52,8 @@ void print_cal() {
     // THIS DOESN'T WORK:
     // snprintf(buf, 16, "%08lX%08lX", ((uint64_t)cal.reference_voltage >> 32) & 0xFFFFFFFFUL, ((uint64_t)cal.reference_voltage) & 0xFFFFFFFFUL);
     // I HAVE TO DO THIS:
-    snprintf(buf, 16, "%08lX", ((uint64_t)cal.reference_voltage >> 32) & 0xFFFFFFFFUL);
-    snprintf(&buf[8], 8, "%08lX", ((uint64_t)cal.reference_voltage) & 0xFFFFFFFFUL);
+    snprintf(buf, 16, "%08lX", (uint32_t)((uint64_t)cal.reference_voltage >> 32) & 0xFFFFFFFFUL);
+    snprintf(&buf[8], 8, "%08lX", (uint32_t)((uint64_t)cal.reference_voltage) & 0xFFFFFFFFUL);
 
     Serial.println(buf);
     Serial.print(F("\t     : "));
@@ -84,7 +85,7 @@ void zero_cal() {
   Serial.println(F("Cal finished"));
   max7219.Clear();
   max7219.DisplayText("CAL Fin", 0);
-  current_calibration.calibrated = 1;
+  current_calibration.calibrated |= 1<<0;
   save_calibration();
   delay(3000);
   digitalWrite(LED2, LOW);
@@ -116,4 +117,53 @@ void zero_cal_single(int ind) {
   Serial.print(F("Offset: "));
   Serial.println((int32_t)acc, DEC);
   current_calibration.x[ind].zero_offset = acc;
+}
+
+
+#define VALUE_CAL_COUNT (256)
+void cal_at_value(enum Range mode, float64_t real_value) {
+  int index = (int)mode - 1;
+  Serial.println(F("Preparing to cal"));
+  while (Serial.available() > 0) {
+    Serial.read();  // Flush serial input
+  }
+  Serial.print(F("Apply "));
+  Serial.print(fp64_ds(real_value));
+  Serial.println(F(" V and press B1 or send 'y'"));
+  max7219.Clear();
+  max7219.DisplayText("rEAdY", 0);
+  while (read_buttons() != 1 && !(Serial.available() > 0 && Serial.read() == 'y'));  // Wait for input
+  digitalWrite(LED3, LOW);
+  digitalWrite(LED4, LOW);
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
+  Serial.println(F("Calibrating..."));
+  max7219.Clear();
+  max7219.DisplayText("CAL . . .", 0);
+  set_relays(mode);
+  delay(5000);
+  int32_t val;
+  int64_t acc = 0LL;
+  // Discard first few
+  for (int i=0; i<5; i++) {
+    ltc2400_read();
+  }
+  for (int i=0; i<VALUE_CAL_COUNT; i++) {
+    val = ltc2400_convert_raw(ltc2400_read());
+    acc += (int64_t)val;
+  }
+  acc /= (int64_t)VALUE_CAL_COUNT;
+  Serial.println(F("Cal finished"));
+  max7219.Clear();
+  max7219.DisplayText("CAL Fin", 0);
+
+  uint32_t scale = acc - current_calibration.x[index].zero_offset;
+  current_calibration.x[index].scale = scale;
+  current_calibration.x[index].reference_voltage = real_value;
+  current_calibration.calibrated |= 1<<(int)mode;
+  save_calibration();
+  delay(3000);
+  digitalWrite(LED2, LOW);
+  averaging_mode = AVERAGE_NONE;
+  update_range_mode(RANGE_AUTO);
 }

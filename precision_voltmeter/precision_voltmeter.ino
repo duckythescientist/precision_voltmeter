@@ -70,8 +70,9 @@ enum Range relay_mode = RANGE_NONE;
 
 #define ALPHA_2Hz (0.6262344812602125f)
 #define ALPHA_0p2Hz (0.14350373836394034f)
+#define ALPHA_0p05Hz (0.04020288254460277f)
 
-enum AveragingMode : uint8_t {AVERAGE_NONE = 0, AVERAGE_FAST, AVERAGE_SLOW, AVERAGING_MODES_COUNT} averaging_mode = AVERAGE_NONE;
+enum AveragingMode : uint8_t {AVERAGE_NONE = 0, AVERAGE_FAST, AVERAGE_SLOW, AVERAGE_SUPER_SLOW, AVERAGING_MODES_COUNT} averaging_mode = AVERAGE_NONE;
 Double averaged;
 
 bool interrupt_happened = false;
@@ -150,6 +151,9 @@ void update_average(Double val) {
     case AVERAGE_SLOW:
       averaged += (val - averaged) * Double(ALPHA_0p2Hz);
       break;
+    case AVERAGE_SUPER_SLOW:
+      averaged += (val - averaged) * Double(ALPHA_0p05Hz);
+      break;
     case AVERAGE_NONE:
     default:
       averaged = val;
@@ -160,6 +164,12 @@ void update_average(Double val) {
 //  float foo = TWO_PI * sampling_period * f;
 //  return foo / (1 + foo);
 //}
+
+//import math
+//def get_iir_alpha(f, sampling_period=0.13333):
+//    foo = 2 * math.pi * sampling_period * f
+//    return foo / (1 + foo)
+
 
 
 
@@ -197,6 +207,10 @@ void update_range_mode(enum Range mode) {
 }
 
 void handle_serial() {
+  int cal_mode = 0;
+  float64_t real_value = float64_ONE_POSSIBLE_NAN_REPRESENTATION;
+  char buf[32];
+  size_t len;
   int command = Serial.read();
   if (command >= 'A' && command <= 'Z') {
     command ^= 0x20;
@@ -211,8 +225,33 @@ void handle_serial() {
     case 'z':
       zero_cal();
       break;
-    case 'c':
+    case 'p':
       print_cal();
+      break;
+    case 'c':
+      cal_mode = Serial.read();
+      if (cal_mode < '0' || cal_mode > '3') {
+        Serial.print(F("Bad cal mode "));
+        Serial.println(cal_mode);
+        return;
+      }
+      cal_mode = cal_mode - '0';
+      if (Serial.read() != ':') {
+        Serial.println(F("Format error"));
+        return;
+      }
+      len = Serial.readBytesUntil('\n', buf, sizeof(buf));
+      if (!len) {
+        Serial.println(F("Failed to read number"));
+        return;
+      }
+      real_value = fp64_atof(buf);
+      if (fp64_isfinite(real_value)) {
+        cal_at_value(static_cast<Range>(cal_mode + 1), real_value);
+      }
+      else {
+        Serial.println(F("Bad number"));
+      }
       break;
     case ' ':
     case '\r':
@@ -266,10 +305,14 @@ void loop() {
       switch (averaging_mode) {
         case AVERAGE_FAST:
           Serial.println(F("Avg fast"));
-          analogWrite(LED2, 32);
+          analogWrite(LED2, 16);
           break;
         case AVERAGE_SLOW:
           Serial.println(F("Avg slow"));
+           analogWrite(LED2, 64);
+          break;
+        case AVERAGE_SUPER_SLOW:
+          Serial.println(F("Avg SUPER slow"));
           digitalWrite(LED2, HIGH);
           break;
         case AVERAGE_NONE:  // FALLTHROUGH
@@ -360,6 +403,7 @@ void loop() {
       }
     }
   }
+
 
   bool error = false;
   if (range_mode != RANGE_AUTO) {
