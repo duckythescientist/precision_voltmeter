@@ -90,6 +90,7 @@ void display_value(Double val, enum Range range) {
 
   snprintf(&text[1], 11, fmtstr, whole, rem_int);
   Serial.println(text);
+  Serial1.println(text);
   //  max7219.Clear();
   max7219.DisplayText(text, 0);
 }
