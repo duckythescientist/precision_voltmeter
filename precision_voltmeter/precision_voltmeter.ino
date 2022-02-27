@@ -264,8 +264,35 @@ void handle_serial() {
   }
 }
 
+void update_stability(int32_t raw) {
+  static int32_t last_raw_reading = 0;
+  static uint32_t inc_mask = 0;
+  static uint8_t inc_count = 0;
+
+  uint8_t increasing = (raw > last_raw_reading) ? 1 : 0;
+  last_raw_reading = raw;
+  if (inc_mask & 0x80000000UL) {
+    inc_count -= 1;
+  }
+  inc_mask <<= 1;
+  inc_mask |= increasing;
+  inc_count += increasing;
+  // A truly binomial process will be between 13/32 and 19/32
+  // inclusive 78% of the time. This is maybe too forgiving.
+  // 14-18 inclusive: 62%
+  // 15-17 inclusive: 40%
+  // 16 exactly: 14%
+  if (inc_count >= (16 - 3) && inc_count <= (16 + 3)) {
+    digitalWrite(LED4, HIGH);
+  }
+  else {
+    digitalWrite(LED4, LOW);
+  }
+}
+
 void loop() {
   static int last_button = 0;
+  
 
   //  int mem = freeMemory();
   //  Serial.print("freemem:");
@@ -367,6 +394,7 @@ void loop() {
   Serial.print(buf);
   Serial.println(float_norm, 7);
   update_average(voltage);
+  update_stability(raw);
   display_value(averaged, range_mode);
 
   if (range_mode == RANGE_AUTO) {
