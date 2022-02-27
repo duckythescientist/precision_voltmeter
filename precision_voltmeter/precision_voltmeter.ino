@@ -57,16 +57,11 @@ enum Range : uint8_t {RANGE_AUTO = 0, RANGE_x1, RANGE_x10, RANGE_x100, RANGE_x1k
 enum Range range_mode = RANGE_x1k;
 enum Range relay_mode = RANGE_NONE;
 
-//#define RELAY_x1   1
-//#define RELAY_x10  0
-//#define RELAY_x100 2
-//#define RELAY_x1k  4
-
-
-#define RELAY_x100 1
-#define RELAY_x10  0
+#define RELAY_x100 A3
+#define RELAY_x10  10
 #define RELAY_x1   2
 #define RELAY_x1k  4
+
 
 #define ALPHA_2Hz (0.6262344812602125f)
 #define ALPHA_0p2Hz (0.14350373836394034f)
@@ -91,6 +86,7 @@ void set_relays(enum Range mode) {
 
 void setup() {
   Serial.begin(115200);
+  Serial1.begin(115200);
   pinMode(LED1, OUTPUT);
   digitalWrite(LED1, LOW);
   pinMode(LED2, OUTPUT);
@@ -119,10 +115,9 @@ void setup() {
   max7219.MAX7219_SetBrightness(0x5);  // 0x0 - 0xF
   max7219.Clear();
   max7219.DisplayText("hEllo", 0);
-  delay(1000);
   Serial.println("hello");
+  Serial1.println("hello");
   delay(1000);
-  Serial.println("hello again");
   load_calibration();
   print_cal();
   if (!current_calibration.calibrated) {
@@ -132,12 +127,12 @@ void setup() {
     delay(3000);
   }
 
-  //  // Putting the processor to sleep messes with updates
-  //  // so wait here while button 1 is held.
-  //  while (read_buttons() == 1) {
-  //    delay(5000);
-  //    Serial.println(F("Waiting for update"));
-  //  }
+   // Putting the processor to sleep messes with updates
+   // so wait here while button 1 is held.
+   while (read_buttons() == 1) {
+     delay(5000);
+     Serial.println(F("Waiting for update"));
+   }
 
 }
 
@@ -395,6 +390,9 @@ void loop() {
   Serial.println(float_norm, 7);
   update_average(voltage);
   update_stability(raw);
+  Serial1.print(buf);
+  Serial1.print(float_norm, 7);
+  Serial1.print(" ");
   display_value(averaged, range_mode);
 
   if (range_mode == RANGE_AUTO) {
