@@ -147,3 +147,13 @@ ground_to_case_with_lid.txt
 
 ~ No longer in the metal box
 back_to_the_desk.txt
+!Stats: N: 1500(2000); u:     +7814, s:      +664; R:     +1810    +18015; <:   15, >:   16;
+back_to_the_desk_sitting_still.txt
+!Stats: N: 1500(2000); u:     +7786, s:      +305; R:     +6747     +8992; <:    4, >:    3;
+aluminum_foil_everywhere.txt
+!Stats: N: 1500(2000); u:     +7421, s:     +5197; R:   -164531    +59675; <:   11, >:    4;
+aluminum_foil_everywhere_grounded_shield.txt
+!Stats: N: 1500(2000); u:     +7673, s:     +1148; R:     -6865    +25072; <:   14, >:   11;
+aluminum_foil_everywhere_grounded_shield_sitting_still.txt
+!Stats: N: 1500(2000); u:     +7977, s:      +297; R:     +6856     +8956; <:    5, >:    4;
+
