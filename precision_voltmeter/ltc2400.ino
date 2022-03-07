@@ -20,6 +20,60 @@ uint32_t ltc2400_read(uint8_t ncs, uint8_t sdo, uint8_t sck) {
   return data;
 }
 
+
+ISR(PCINT0_vect) {
+
+}
+
+
+uint32_t ltc2400_read_with_sleeping(uint8_t ncs, uint8_t sdo, uint8_t sck) {
+  uint32_t data = 0;
+
+  PRR1 |= (1<<PRUSB);
+  digitalWrite(sck, LOW);
+  digitalWrite(ncs, LOW);
+  while (digitalRead(sdo)); // Wait until conversion finished
+
+  digitalWrite(sck, HIGH);  // Clock out the first couple bits of data
+  digitalWrite(sck, LOW);
+  digitalWrite(sck, HIGH);
+  digitalWrite(sck, LOW);
+
+
+  set_sleep_mode(SLEEP_MODE_PWR_DOWN);
+  cli();
+  do {
+    sleep_enable();
+    PCMSK0 = (1<<ADC_SDO_PCINT);
+    digitalWrite(ncs, HIGH);  // Abort
+    asm("nop;nop;nop;nop;");
+    digitalWrite(ncs, LOW);
+    asm("nop;nop;nop;nop;");
+    PCICR = (1<<PCIE0);
+    sei();
+    sleep_cpu();
+    PCICR = 0;
+    sleep_disable();
+  } while (digitalRead(sdo));
+  sei();
+
+  uint8_t tmp = 0;
+  tmp = shiftIn(sdo, sck, MSBFIRST);
+  data |= ((uint32_t)tmp) << 24L;
+  tmp = shiftIn(sdo, sck, MSBFIRST);
+  data |= ((uint32_t)tmp) << 16L;
+  tmp = shiftIn(sdo, sck, MSBFIRST);
+  data |= ((uint32_t)tmp) << 8L;
+  tmp = shiftIn(sdo, sck, MSBFIRST);
+  data |= ((uint32_t)tmp) << 0L;
+
+  digitalWrite(sck, LOW);
+  digitalWrite(ncs, HIGH);
+  return data;
+}
+
+
+
 int32_t ltc2400_convert_raw(uint32_t data) {
   // I could do some C casting hackery.
   // Or I could make this more understandable.
@@ -69,7 +123,8 @@ Double ltc2400_adjust(int32_t raw, enum Range mode) {
 }
 
 float ltc2400_adjust_float_norm(int32_t raw) {
-  return raw / float(0x0FFFFFFFUL);
+  // return raw / float(0x0FFFFFFFUL);
+  return raw / float(0x10000000UL);
 }
 
 long quick_pow10(long n)

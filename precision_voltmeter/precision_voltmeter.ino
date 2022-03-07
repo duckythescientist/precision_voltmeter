@@ -34,10 +34,12 @@
 
 #define ADC_nCS 16
 #define ADC_SDO 14
+#define ADC_SDO_PCINT PCINT3
 #define ADC_SCK 15
 
 // Arduino needs declarations with default arguments in the main .ino file
 uint32_t ltc2400_read(uint8_t ncs = ADC_nCS, uint8_t sdo = ADC_SDO, uint8_t sck = ADC_SCK);
+uint32_t ltc2400_read_with_sleeping(uint8_t ncs = ADC_nCS, uint8_t sdo = ADC_SDO, uint8_t sck = ADC_SCK);
 
 
 #define LED1 3
@@ -73,7 +75,64 @@ Double averaged;
 bool interrupt_happened = false;
 
 Statistic stats;
+#define COUNT_BEFORE_OUTLIER_TESTS 500UL
+#define COUNT_BEFORE_CLEAR 2000UL
+#define OUTLIER_DEVIATION 3.0f
+#define STATS_PRINT_DIVISOR 50
 
+
+void do_stats(float float_norm) {
+  static long upper_outlier_count = 0L;
+  static long lower_outlier_count = 0L;
+  static int print_count = STATS_PRINT_DIVISOR;
+  // static int skip_first = 50;
+  // if (skip_first) {
+  //   skip_first--;
+  //   return;
+  // }
+
+  stats.add(float_norm);
+  float mean = stats.average();
+  float stddev = stats.unbiased_stdev();
+  uint32_t count = stats.count();
+  uint32_t count_for_outliers = count > COUNT_BEFORE_OUTLIER_TESTS ? count - COUNT_BEFORE_OUTLIER_TESTS : 0;
+  if (count > COUNT_BEFORE_OUTLIER_TESTS) {
+    float lower = mean - OUTLIER_DEVIATION * stddev;
+    float upper = mean + OUTLIER_DEVIATION * stddev;
+    if (float_norm < lower) {
+      lower_outlier_count++;
+    }
+    if (float_norm > upper) {
+      upper_outlier_count++;
+    }
+  }
+  if (--print_count == 0) {
+    print_count = STATS_PRINT_DIVISOR;
+    int32_t i_min = stats.minimum() * 0x10000000UL;
+    int32_t i_max = stats.maximum() * 0x10000000UL;
+    int32_t i_stddev = stddev * 0x10000000UL;
+    int32_t i_mean = mean * 0x10000000UL;
+    char tmp[128] = {0};
+    snprintf(tmp, 128,
+      "!Stats: "
+      "N: %4ld(%4ld); "
+      "u: %+9ld, s: %+9ld; "
+      "R: %+9ld %+9ld; "
+      "<: %4ld, >: %4ld; ",
+      count_for_outliers, count,
+      i_mean, i_stddev,
+      i_min, i_max,
+      lower_outlier_count, upper_outlier_count
+    );
+    Serial1.println(tmp);
+  }
+
+  if (count >= COUNT_BEFORE_CLEAR) {
+    stats.clear();
+    upper_outlier_count = 0L;
+    lower_outlier_count = 0L;
+  }
+}
 
 
 void set_relays(enum Range mode) {
@@ -108,15 +167,16 @@ void setup() {
   pinMode(RELAY_x10, OUTPUT);
   pinMode(RELAY_x100, OUTPUT);
   pinMode(RELAY_x1k, OUTPUT);
-  relay_mode = RANGE_x1k;
-  set_relays(relay_mode);
+  // relay_mode = RANGE_x1k;
+  // set_relays(relay_mode)
+  update_range_mode(RANGE_x10);
 
   max7219.Begin();
   max7219.MAX7219_SetBrightness(0x5);  // 0x0 - 0xF
   max7219.Clear();
   max7219.DisplayText("hEllo", 0);
   Serial.println("hello");
-  Serial1.println("hello");
+  // Serial1.println("hello");
   delay(1000);
   load_calibration();
   print_cal();
@@ -134,6 +194,8 @@ void setup() {
      Serial.println(F("Waiting for update"));
    }
 
+   stats.clear();
+   delay(30000);
 }
 
 
@@ -285,6 +347,45 @@ void update_stability(int32_t raw) {
   }
 }
 
+
+void loop() {
+  static int skip_first = 50;
+  static int loop_count = 0;
+
+
+  uint32_t reading = ltc2400_read();
+  int32_t raw = ltc2400_convert_raw(reading);
+  float float_norm = ltc2400_adjust_float_norm(raw);
+  Double voltage = ltc2400_adjust(raw, relay_mode);
+  char buf[16] = {0};
+  snprintf(buf, 32, "Raw: 0x%08lx ", raw);
+  Serial.print(buf);
+  Serial.println(float_norm, 7);
+  update_average(voltage);
+  update_stability(raw);
+  // Serial1.print(buf);
+  // Serial1.print(float_norm, 7);
+  // Serial1.print(" ");
+  display_value(averaged, range_mode);
+
+  if (skip_first) {
+    skip_first--;
+    return;
+  }
+
+  snprintf(buf, 32, "0x%08lx", raw);
+  Serial1.println(buf);
+  do_stats(float_norm);
+
+  if (++loop_count == COUNT_BEFORE_CLEAR) {
+    digitalWrite(LED1, HIGH);
+    while(1){};
+  }
+}
+
+
+
+/*
 void loop() {
   static int last_button = 0;
   
@@ -390,10 +491,11 @@ void loop() {
   Serial.println(float_norm, 7);
   update_average(voltage);
   update_stability(raw);
-  Serial1.print(buf);
-  Serial1.print(float_norm, 7);
-  Serial1.print(" ");
+  // Serial1.print(buf);
+  // Serial1.print(float_norm, 7);
+  // Serial1.print(" ");
   display_value(averaged, range_mode);
+  do_stats(float_norm);
 
   if (range_mode == RANGE_AUTO) {
     // Check if outside of range
@@ -459,3 +561,5 @@ void loop() {
   }
 
 }
+*/
+
