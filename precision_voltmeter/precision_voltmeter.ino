@@ -492,6 +492,9 @@ void loop() {
     while (read_buttons()) {
       ; // Wait for buttons to be idle
     }
+    range_mode = RANGE_x1k;
+    update_range_mode(range_mode);
+    relay_mode = RANGE_x1k;
     set_relays(relay_mode);
   }
 
