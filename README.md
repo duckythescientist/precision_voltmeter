@@ -4,17 +4,47 @@ Partly based off of the Scullcom millivolt meter: http://www.scullcom.uk/design-
 
 
 
+## Serial comms
+
+```
+Commands:
+    h    - Print this help
+    ?    - Print version and date
+    r    - Toggle live readout over serial
+    p    - Print calibration
+    z    - Calibrate at 0V (inputs shorted)
+    c... - Calibrate for a specific range and value
+
+Calibration:
+    c[n]:[f]  - Calibrates for range [n] with external applied voltage [f]
+    Range:
+        0: x1 LV
+        1: x10
+        2: x100
+        3: x1000
+    Example: to calibrate the x10 range (HV input) with a 4.123V reference,
+        the command would be `c1:4.123`
+```
+
+
+# Improvement notes
+
+I added an opto-isolated serial output and spent a weekend tearing down and building back up the circuit. I don't think it's going to get much better than it is (or already was). Without ESD/EMI and environmental noise, the noise in the readings is on the same order of magnitude that I'd expect from thermal noise of a 1Meg resistor. Assuming that my napkin math is correct. Also, the constant offset that I'm seeing is also on the order of what's to be expected with the input bias current of the LTC2057 and a 1Meg resistor. I guess it's just up to software corrections. Still getting around 19-20 usable bits from the ADC. I'm calling that a win.
+
+Environmental noise is still a big issue. Stddev of the readings lowers by an order of magnitude if I sit perfectly still.
+
+
 # Notes for Future Versions and Improvements
 
 ## Issues
 
-The LTC2057 has a common-mode input range from 0.1V below V- to 1.5V _below_ V+. Meaning that with a -2.5V,+5V supply, I can only buffer signals up to 3.5V technically. I'm seeing some sort of latchup-type behavior at around 4.2V.
+The LTC2057 has a common-mode input range from 0.1V below V- to 1.5V _below_ V+. Meaning that with a -2.5V,+5V supply, I can only buffer signals up to 3.5V technically. I'm seeing some sort of latchup-type behavior at around 4.2V. I've bodged in a 6.8V supply rail to the op-amp.
 
 ## Bodges
 
-The sampling of the ADC is rather noisy. Adding filter capacitors right at the input and the vref seem to help. Reduced the resistor between the buffer and the ADC to 2.2k. May want to go lower?
+The sampling of the ADC is rather noisy. Adding filter capacitors right at the input and the vref seem to help. Reduced the resistor between the buffer and the ADC to 2.2k. May want to go lower? I'm currently at 100R series from the buffer to the ADC and a 2.2nF cap to gnd.
 
-Adding extra voltage regulator to drive the op-amp positive rail at around 6.8V to give enough common-mode headroom to buffer a full input swing to the ADC. (Boards ordered but not received/installed.)
+Adding extra voltage regulator to drive the op-amp positive rail at around 6.8V to give enough common-mode headroom to buffer a full input swing to the ADC.
 
 
 ## Future
@@ -23,7 +53,13 @@ The x10 mode presents around a 1Meg input impedance to the op-amp this combined 
 
 A 1Meg input impedance may be the way to go.
 
-For lower noise, it may be nice to try LT3094 and LT3042 for post switching converter regulation. The switching regulatorHowever, the voltage lines look pretty clean right now. Also, these regulators are pretty expensive and are DFN packages.
+For lower noise, it may be nice to try LT3094 and LT3042 for post switching converter regulation. The switching regulator. However, the voltage lines look pretty clean right now. Also, these regulators are pretty expensive and are DFN packages. UPDATE: replacing the switching regulator with batteries didn't measurably reduce the noise. The current design is good enough.
+
+A metal enclosure and/or more shielding could maybe help with environmental noise.
+
+I need a buffer amp for the output of my Kelvin-Varley divider. Or I need a voltage reference below about 4V to calibrate the x1 range. This is a lab problem and not a problem of the voltmeter.
+
+I need to investigate Barbouri's v2 design and see if there is anything worth adding to my design.
 
 
 # References
