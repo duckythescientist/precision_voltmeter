@@ -1,0 +1,149 @@
+Default configuration. x10 range. Open terminals.
+
+Sitting really still at the computer
+
+Stats: N:    0( 300); u:     +7798, s:      +254; R:     +7159     +8606; <:    0, >:    0;
+Stats: N: 1500(2000); u:     +7828, s:      +265; R:     +6806     +8955; <:    3, >:    1;
+
+Moving around during the test
+Stats: N:    0( 300); u:     +7746, s:     +2482; R:    -28417    +18409; <:    0, >:    0;
+Stats: N: 1500(2000); u:     +7828, s:     +3373; R:    -89178    +58046; <:   13, >:   19;
+
+
+
+---------------------------------------------
+
+
+unmodified_sitting_still.txt
+!Stats: N: 1500(2000); u:     +7776, s:      +280; R:     +6910     +8791; <:    0, >:    4;
+unmodified_moving_around.txt
+!Stats: N: 1500(2000); u:     +7746, s:     +2168; R:    -36392    +29251; <:   20, >:    7;
+battery_powered_sitting_still.txt
+!Stats: N: 1500(2000); u:     +7808, s:      +259; R:     +6985     +8749; <:    1, >:    4;
+battery_powered_moving_around.txt
+!Stats: N: 1500(2000); u:     +7888, s:     +1144; R:      -816    +24440; <:   18, >:   27;
+battery_powered_3Ubox_sitting_still.txt
+!Stats: N: 1500(2000); u:     +7433, s:      +296; R:     +6384     +8348; <:    0, >:    6;
+battery_powered_3Ubox_moving_around.txt
+!Stats: N: 1500(2000); u:     +7733, s:      +261; R:     +6962     +8616; <:    0, >:    3;
+
+no_display.txt
+!Stats: N: 1500(2000); u:     +7435, s:      +292; R:     +6396     +8436; <:    0, >:    9;
+no_display_sleeping.txt
+!Stats: N: 1500(2000); u:     +7758, s:      +285; R:     +6755     +8743; <:    0, >:    6;
+shielded_converter.txt
+!Stats: N: 1500(2000); u:     +8314, s:      +317; R:     +7183     +9303; <:    0, >:    6;
+
+bypassed_relay.txt
+!Stats: N: 1500(2000); u:     +6758, s:      +565; R:     +2220    +11461; <:   20, >:   14;
+bypassed_relay2.txt
+!Stats: N: 1500(2000); u:     +6763, s:     +3074; R:    -10409    +24905; <:  107, >:   98;
+~ This made it worse
+~~~~ WHOOPS FORGOT TO REPLACE THE SHIELD
+
+bypassed_relay_with_shield.txt
+!Stats: N: 1500(2000); u:     +6853, s:      +352; R:     +3826     +8756; <:    2, >:    1;
+bypassed_relay_with_shield2.txt
+!Stats: N: 1500(2000); u:     +6841, s:      +884; R:     -2697    +14326; <:    0, >:    0;
+~ Still made it worse....
+
+~ Removing the relay bypass
+
+removed_bypass.txt
+!Stats: N: 1500(2000); u:     +7423, s:      +374; R:     +6256     +8490; <:    0, >:    4;
+5V_direct_relay_drive.txt
+!Stats: N: 1500(2000); u:     +7606, s:      +443; R:     +2861    +12851; <:    9, >:   12;
+
+~ Back to standard relay control
+~ Two 9V batteries instead of the switching converter
+all_batteries.txt
+!Stats: N: 1500(2000); u:     +7403, s:      +275; R:     +6354     +8403; <:    0, >:    8;
+
+removed_banana_and_coax.txt
+!Stats: N: 1500(2000); u:     +7144, s:      +357; R:     +5985     +8075; <:    0, >:    2;
+
+~ Disconnected output of op-amp and shorted input of ADC to gnd with a 1k
+1k_to_gnd.txt
+!Stats: N: 1500(2000); u:        -2, s:      +103; R:      -370      +381; <:    2, >:    4;
+
+~ Reconnected with 100R series and 2n2 to gnd
+2n2_100R.txt
+!Stats: N: 1500(2000); u:     +7574, s:      +304; R:     +6515     +8482; <:    1, >:    2;
+
+~ Disconnect regular amp input. Short input to gnd with 100R
+100R_input.txt
+!Stats: N: 1500(2000); u:       -62, s:      +108; R:      -430      +283; <:    2, >:    0;
+
+Thinking about offset....
+LTC2057 has a 4uV offset max (0.5uV typical). 4E-6 * 2**28 / 4.096 == 262 counts, so that's not causing the nearly 8k offset.
+Input bias current is 200pA max at room temp (30pA typ). Assuming 1Meg impedance of the divider.
+200E-12 * 1E6 == 2E-4 V
+2E-4 * 2**28 / 4.096 == 13107
+Hrm... Yeah, that'd do it.
+Below 75C, it's constant.
+
+
+~ 1k5 series resistor and 4n7 cap
+1k5_4n7.txt
+!Stats: N: 1500(2000); u:     +4284, s:      +485; R:     +2824     +6091; <:    0, >:    7;
+~ Idk why stddev is up.
+1k5_removed_cap.txt
+!Stats: N: 1500(2000); u:     +7689, s:      +307; R:     +6734     +8679; <:    2, >:    0;
+~ Cleaned the flux from the board. Should be the same as before???
+1k5_removed_cap_cleaned.txt
+!Stats: N: 1500(2000); u:     +7522, s:      +354; R:     +6172     +8601; <:    0, >:    8;
+reconnected_banana_coax.txt
+!Stats: N: 1500(2000); u:     +7625, s:      +325; R:     +6404     +8757; <:    1, >:    7;
+
+
+Idea....
+Idk what the bandwidth of the front end is, but for sake of argument, let's say it's 1kHz (which is the default on the first web calculator I found).
+1Meg ohm at room temp and 1kHz BW gives about 4uV RMS noise
+4E-6 * 2**28 / 4.096 == 262 counts
+So back of the napkin says we can't actually do much better than where we are. Lol.
+
+
+
+~ Put the +-12V psu back covered in copper tape but the tape is NOT connected to anything.
+replaced_isolated_psu.txt
+!Stats: N: 1500(2000); u:     +7991, s:      +327; R:     +6854     +9075; <:    0, >:    3;
+replaced_isolated_psu_2.txt
+!Stats: N: 1500(2000); u:     +7860, s:      +377; R:     +6626     +8937; <:    0, >:    6;
+
+~ Now powering from the desktop's USB instead of battery
+usb_powered.txt
+!Stats: N: 1500(2000); u:     +7764, s:      +386; R:     +6529     +9647; <:    0, >:    9;
+
+~ Put in the +-9V isolated PSU. No copper tape yet.
+9V_switcher.txt
+!Stats: N: 1500(2000); u:     +7726, s:      +375; R:     +6449    +11154; <:    0, >:    8;
+
+9V_switcher_shielded.txt
+!Stats: N: 1500(2000); u:     +7762, s:      +359; R:     +6580    +11274; <:    0, >:    6;
+9V_switcher_shielded_to_supply_gnd.txt
+!Stats: N: 1500(2000); u:     +7649, s:      +367; R:     +5545     +9763; <:    0, >:    1;
+9V_switcher_shielded_to_iso_gnd.txt
+!Stats: N: 1500(2000); u:     +7663, s:      +375; R:     +5164    +10328; <:    6, >:   11;
+
+~ Looks like supply gnd is better. Going back to that.
+9V_switcher_shielded_to_supply_gnd_again.txt
+!Stats: N: 1500(2000); u:     +7624, s:      +364; R:     +5252     +9042; <:    1, >:    7;
+
+reconnected_display_and_buttons.txt
+!Stats: N: 1500(2000); u:     +7738, s:      +324; R:     +6745     +8874; <:    0, >:    5;
+
+disabled_sleeping.txt
+!Stats: N: 1500(2000); u:     +8130, s:      +325; R:     +6812    +11239; <:    0, >:    0;
+
+~ Lid off the big metal box
+lid_off.txt
+!Stats: N: 1500(2000); u:     +7864, s:      +396; R:     +5431    +13284; <:    8, >:   10;
+
+~ Connecting the gnd input to the metal box (lid still off)
+ground_to_case.txt
+!Stats: N: 1500(2000); u:     +8107, s:      +296; R:     +7140     +9191; <:    2, >:    1;
+ground_to_case_with_lid.txt
+!Stats: N: 1500(2000); u:     +7883, s:      +296; R:     +6721     +9024; <:    3, >:    6;
+
+~ No longer in the metal box
+back_to_the_desk.txt
