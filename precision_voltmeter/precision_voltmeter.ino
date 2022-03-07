@@ -72,6 +72,8 @@ Double averaged;
 
 bool interrupt_happened = false;
 
+bool readout_enabled = true;
+
 Statistic stats;
 
 
@@ -201,6 +203,30 @@ void update_range_mode(enum Range mode) {
   set_relays(relay_mode);
 }
 
+
+void print_help() {
+  Serial.println(F(
+    "Commands:\r\n"
+    "\th    - Print this help\r\n"
+    "\t?    - Print version and date\r\n"
+    "\tr    - Toggle live readout over serial\r\n"
+    "\tp    - Print calibration\r\n"
+    "\tz    - Calibrate at 0V (inputs shorted)\r\n"
+    "\tc... - Calibrate for a specific range and value\r\n"
+    "\r\n"
+    "Calibration:\r\n"
+    "\tc[n]:[f]  - Calibrates for range [n] with external applied voltage [f]\r\n"
+    "\tRange:\r\n"
+    "\t\t0: x1 LV\r\n"
+    "\t\t1: x10\r\n"
+    "\t\t2: x100\r\n"
+    "\t\t3: x1000\r\n"
+    "\tExample: to calibrate the x10 range (HV input) with a 4.123V reference,\r\n"
+    "\t\tthe command would be `c1:4.123`\r\n"
+  ));
+}
+
+
 void handle_serial() {
   int cal_mode = 0;
   float64_t real_value = float64_ONE_POSSIBLE_NAN_REPRESENTATION;
@@ -211,17 +237,26 @@ void handle_serial() {
     command ^= 0x20;
   }
   switch (command) {
+    case 'h':
+      readout_enabled = false;
+      print_help();
+      break;
     case '?':
+      readout_enabled = false;
       Serial.println(F("Precision Voltmeter"));
       Serial.print(F("\tVersion: "));
       Serial.println(CAL_VERSION, HEX);
       Serial.println(F("\tDate: " __DATE__));
+      Serial.println(F("Type h for help"));
       break;
-    case 'z':
-      zero_cal();
+    case 'r':
+      readout_enabled = !readout_enabled;
       break;
     case 'p':
       print_cal();
+      break;
+    case 'z':
+      zero_cal();
       break;
     case 'c':
       cal_mode = Serial.read();
@@ -386,8 +421,10 @@ void loop() {
   Double voltage = ltc2400_adjust(raw, relay_mode);
   char buf[16] = {0};
   snprintf(buf, 32, "Raw: 0x%08lx ", raw);
-  Serial.print(buf);
-  Serial.println(float_norm, 7);
+  if (readout_enabled) {
+    Serial.print(buf);
+    Serial.println(float_norm, 7);
+  }
   update_average(voltage);
   update_stability(raw);
   Serial1.print(buf);

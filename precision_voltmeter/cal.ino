@@ -62,6 +62,32 @@ void print_cal() {
 }
 
 
+bool get_confirmation() {
+  while(1) {
+    int button = read_buttons();
+    if (button == 1) {
+      return true;
+    }
+    if (button != 0) {
+      return false;
+    }
+
+    if (Serial.available() > 0) {
+      int val = Serial.read();
+      switch (val) {
+        case 'y':
+        case 'Y':
+        case '1':
+          return true;
+          break;
+        default:
+          return false;
+          break;
+      }
+    }
+  }
+}
+
 void zero_cal() {
   Serial.println(F("Preparing to cal"));
   while (Serial.available() > 0) {
@@ -70,7 +96,15 @@ void zero_cal() {
   Serial.println(F("Short inputs and press B1 or send 'y'"));
   max7219.Clear();
   max7219.DisplayText("Short", 0);
-  while (read_buttons() != 1 && !(Serial.available() > 0 && Serial.read() == 'y'));  // Wait for input
+  bool confirm = get_confirmation();
+  if (!confirm) {
+    Serial.println(F("Canceled"));
+    max7219.Clear();
+    max7219.DisplayText("CAnCEL", 0);
+    delay(5000);
+    max7219.Clear();
+    return;
+  }
   digitalWrite(LED3, LOW);
   digitalWrite(LED4, LOW);
   digitalWrite(LED1, LOW);
@@ -107,7 +141,7 @@ void zero_cal_single(int ind) {
   int64_t acc = 0LL;
   // Discard first few
   for (int i=0; i<5; i++) {
-    ltc2400_read(); 
+    ltc2400_read();
   }
   for (int i=0; i<ZERO_CAL_COUNT; i++) {
     val = ltc2400_convert_raw(ltc2400_read());
@@ -132,7 +166,15 @@ void cal_at_value(enum Range mode, float64_t real_value) {
   Serial.println(F(" V and press B1 or send 'y'"));
   max7219.Clear();
   max7219.DisplayText("rEAdY", 0);
-  while (read_buttons() != 1 && !(Serial.available() > 0 && Serial.read() == 'y'));  // Wait for input
+  bool confirm = get_confirmation();
+  if (!confirm) {
+    Serial.println(F("Canceled"));
+    max7219.Clear();
+    max7219.DisplayText("CAnCEL", 0);
+    delay(5000);
+    max7219.Clear();
+    return;
+  }
   digitalWrite(LED3, LOW);
   digitalWrite(LED4, LOW);
   digitalWrite(LED1, LOW);
